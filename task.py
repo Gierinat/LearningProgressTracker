@@ -1,9 +1,11 @@
 import re
 
-acceptable_commands = ['exit', 'add students', 'back', 'list', 'add points']
-ERROR_MSG = ("No input", "Unknown command!", "Incorrect credentials", "This email is already taken")
+acceptable_commands = ['exit', 'add students', 'back', 'list', 'add points', 'find']
+ERROR_MSG = ("No input", "Unknown command!", "Incorrect credentials", "This email is already taken",
+             "Incorrect points format.", "No student is found for id=%s")
 INFO_MSG = ("Bye!", "Enter 'exit' to exit the program.", "Enter student credentials or 'back' to return",
-            "No students found", "Enter an id and points or 'back' to return:")
+            "No students found", "Enter an id and points or 'back' to return:", "Points updated.",
+            "Enter an id or 'back' to return")
 student_dict = {}
 student_points = {}
 
@@ -27,7 +29,7 @@ def save_student(email, first_name, last_name):
     else:
         details = {'email': email, 'f_name': first_name, 'l_name': last_name}
         student_dict[id_s] = details
-        student_points[id_s] = {'P': 0, 'DSA': 0, 'DB': 0, 'F': 0}
+        student_points[id_s] = {'Python': 0, 'DSA': 0, 'Databases': 0, 'Flask': 0}
         return True
 
 
@@ -59,6 +61,7 @@ def add_student():
 
         print("The student has been added.")
         total_entries += 1
+        print(student_dict)
 
 
 def validate_name(validate_string, name):
@@ -82,8 +85,43 @@ def list_students():
     if len(student_dict) == 0:
         print(INFO_MSG[3])
     else:
+        print("Students:")
         for key in student_dict.keys():
             print(key)
+
+
+def check_student_exist(student):
+    if student in student_dict.keys():
+        return True
+    else:
+        print(f"No student is found for id={student}.")
+        return False
+
+
+def validate_points(points):
+    if len(points) != 4:
+        print(ERROR_MSG[4])
+        return False
+
+    try:
+        points = [int(x) for x in points]
+        val = sum(points) == sum(abs(x) for x in points)
+    except (ValueError, TypeError):
+        print(ERROR_MSG[4])
+        return False
+
+    if val:
+        return points
+    else:
+        print(ERROR_MSG[4])
+        return False
+
+
+def save_points(student, points):
+    student_points[student]['Python'] += points[0]
+    student_points[student]['DSA'] += points[1]
+    student_points[student]['Databases'] += points[2]
+    student_points[student]['Flask'] += points[3]
 
 
 def add_points():
@@ -92,6 +130,45 @@ def add_points():
         entry = input()
         if entry == 'back':
             break
+
+        student_and_points = entry.split()
+        student = int(student_and_points.pop(0))
+        if not check_student_exist(student):
+            continue
+        points = validate_points(student_and_points)
+        if not points:
+            continue
+
+        save_points(student, points)
+        print(INFO_MSG[5])
+
+
+def display_student(student):
+    output = ''
+    for key, val in student_points[student].items():
+        output += f"{key}={val}; "
+    # Remove the last semicolon and space
+    output = output.rstrip('; ')
+
+    print(student, "points: ", output)
+
+
+def find():
+    entry = ""
+    while entry != 'back':
+        entry = input()
+        if entry == 'back':
+            break
+
+        try:
+            student = int(entry)
+            if student in student_dict:
+                display_student(student)
+            else:
+                print(ERROR_MSG[5] % entry)
+        except TypeError:
+            print(ERROR_MSG[5] % entry)
+            continue
 
 
 def main():
@@ -108,6 +185,9 @@ def main():
         elif command == 'add points':
             print(INFO_MSG[4])
             add_points()
+        elif command == 'find':
+            print(INFO_MSG[6])
+            find()
         elif command == 'back':
             print(INFO_MSG[1])
         elif command == 'exit':
