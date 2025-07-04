@@ -1,13 +1,15 @@
 import re
 
-acceptable_commands = ['exit', 'add students', 'back', 'list', 'add points', 'find']
+acceptable_commands = ['exit', 'add students', 'back', 'list', 'add points', 'find', 'statistics']
 ERROR_MSG = ("No input", "Unknown command!", "Incorrect credentials", "This email is already taken",
              "Incorrect points format.", "No student is found for id=%s")
 INFO_MSG = ("Bye!", "Enter 'exit' to exit the program.", "Enter student credentials or 'back' to return",
             "No students found", "Enter an id and points or 'back' to return:", "Points updated.",
-            "Enter an id or 'back' to return")
+            "Enter an id or 'back' to return", "Type the name of a course to see details or 'back' to quit")
 student_dict = {}
 student_points = {}
+course_stats = {'Python': {'max': 600, 'users': set()}, 'DSA': {'max': 400, 'users': set()},
+                'Databases': {'max': 480, 'users': set()}, 'Flask': {'max': 550, 'users': set()}}
 
 
 def validate_command():
@@ -94,7 +96,7 @@ def check_student_exist(student):
     if student in student_dict.keys():
         return True
     else:
-        print(f"No student is found for id={student}.")
+        print(ERROR_MSG[5] % student)
         return False
 
 
@@ -119,9 +121,20 @@ def validate_points(points):
 
 def save_points(student, points):
     student_points[student]['Python'] += points[0]
+    if points[0]:
+        course_stats['Python']['users'].add(student)
+
     student_points[student]['DSA'] += points[1]
+    if points[1]:
+        course_stats['DSA']['users'].add(student)
+
     student_points[student]['Databases'] += points[2]
+    if points[2]:
+        course_stats['Databases']['users'].add(student)
+
     student_points[student]['Flask'] += points[3]
+    if points[3]:
+        course_stats['Flask']['users'].add(student)
 
 
 def add_points():
@@ -132,7 +145,11 @@ def add_points():
             break
 
         student_and_points = entry.split()
-        student = int(student_and_points.pop(0))
+        student = student_and_points.pop(0)
+        try:
+            student = int(student)
+        except ValueError:
+            print(ERROR_MSG[5] % student)
         if not check_student_exist(student):
             continue
         points = validate_points(student_and_points)
@@ -166,9 +183,36 @@ def find():
                 display_student(student)
             else:
                 print(ERROR_MSG[5] % entry)
-        except TypeError:
+        except (TypeError, ValueError):
             print(ERROR_MSG[5] % entry)
             continue
+
+
+def calculate_popularity():
+    # Count users
+    counts = {}
+    for course in course_stats:
+        count = len(course_stats[course]['users'])
+        counts.setdefault(count, []).append(course)
+
+    if sum(len(u['users']) for u in course_stats.values()):
+        # Sort by key descending
+        sorted_keys = sorted(counts.keys(), reverse=True)
+
+        # First and last positions
+        m_popular = counts[sorted_keys[0]]  # values for highest key
+        l_popular = counts[sorted_keys[-1]]  # values for lowest key
+        return m_popular, l_popular
+    else:
+        return 'n/a', 'n/a'
+
+
+
+def display_stats():
+    print(INFO_MSG[7])
+    m_popular, l_popular = calculate_popularity()
+    print("Most popular: ", ", ".join(m_popular))
+    print("Least popular: ", ", ".join(l_popular))
 
 
 def main():
@@ -188,6 +232,8 @@ def main():
         elif command == 'find':
             print(INFO_MSG[6])
             find()
+        elif command == 'statistics':
+            display_stats()
         elif command == 'back':
             print(INFO_MSG[1])
         elif command == 'exit':
