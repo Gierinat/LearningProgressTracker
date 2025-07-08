@@ -8,8 +8,10 @@ INFO_MSG = ("Bye!", "Enter 'exit' to exit the program.", "Enter student credenti
             "Enter an id or 'back' to return", "Type the name of a course to see details or 'back' to quit")
 student_dict = {}
 student_points = {}
-course_stats = {'Python': {'max': 600, 'users': set()}, 'DSA': {'max': 400, 'users': set()},
-                'Databases': {'max': 480, 'users': set()}, 'Flask': {'max': 550, 'users': set()}}
+course_stats = {'Python': {'max': 600, 'users': set(), 'submissions': 0},
+                'DSA': {'max': 400, 'users': set(), 'submissions': 0},
+                'Databases': {'max': 480, 'users': set(), 'submissions': 0},
+                'Flask': {'max': 550, 'users': set(), 'submissions': 0}}
 
 
 def validate_command():
@@ -123,18 +125,22 @@ def save_points(student, points):
     student_points[student]['Python'] += points[0]
     if points[0]:
         course_stats['Python']['users'].add(student)
+        course_stats['Python']['submissions'] += 1
 
     student_points[student]['DSA'] += points[1]
     if points[1]:
         course_stats['DSA']['users'].add(student)
+        course_stats['DSA']['submissions'] += 1
 
     student_points[student]['Databases'] += points[2]
     if points[2]:
         course_stats['Databases']['users'].add(student)
+        course_stats['Databases']['submissions'] += 1
 
     student_points[student]['Flask'] += points[3]
     if points[3]:
         course_stats['Flask']['users'].add(student)
+        course_stats['Flask']['submissions'] += 1
 
 
 def add_points():
@@ -207,12 +213,33 @@ def calculate_popularity():
         return 'n/a', 'n/a'
 
 
+def calculate_activity():
+    # Count submissions
+    counts = {}
+    for course in course_stats:
+        count = course_stats[course]['submissions']
+        counts.setdefault(count, []).append(course)
+
+    if sum(c['submissions'] for c in course_stats.values()):
+        # Sort by key descending
+        sorted_keys = sorted(counts.keys(), reverse=True)
+
+        # First and last positions
+        h_activity = counts[sorted_keys[0]]  # values for highest key
+        l_activity = counts[sorted_keys[-1]]  # values for lowest key
+        return h_activity, l_activity
+    else:
+        return 'n/a', 'n/a'
+
 
 def display_stats():
     print(INFO_MSG[7])
     m_popular, l_popular = calculate_popularity()
-    print("Most popular: ", ", ".join(m_popular))
-    print("Least popular: ", ", ".join(l_popular))
+    h_activity, l_activity = calculate_activity()
+    print("Most popular:", ", ".join(m_popular))
+    print("Least popular:", ", ".join(l_popular))
+    print("Highest activity:", ", ".join(h_activity))
+    print("Lowest activity:", ", ".join(l_activity))
 
 
 def main():
