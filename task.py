@@ -232,14 +232,39 @@ def calculate_activity():
         return 'n/a', 'n/a'
 
 
+def calculate_difficulty():
+    # Count average: all user points / submissions
+    counts = {}
+    for course in course_stats:
+        count = sum(entry[course] for entry in student_points.values()) / course_stats[course]['submissions']
+        counts.setdefault(count, []).append(course)
+
+    print(counts)
+
+    if sum(c['submissions'] for c in course_stats.values()):
+        # Sort by key descending
+        sorted_keys = sorted(counts.keys(), reverse=True)
+        print(sorted_keys)
+
+        # First and last positions
+        easy_course = counts[sorted_keys[0]]  # values for highest key
+        hard_course = counts[sorted_keys[-1]]  # values for lowest key
+        return easy_course, hard_course
+    else:
+        return 'n/a', 'n/a'
+
+
 def display_stats():
     print(INFO_MSG[7])
     m_popular, l_popular = calculate_popularity()
     h_activity, l_activity = calculate_activity()
+    easy_course, hard_course = calculate_difficulty()
     print("Most popular:", ", ".join(m_popular))
     print("Least popular:", ", ".join(l_popular))
     print("Highest activity:", ", ".join(h_activity))
     print("Lowest activity:", ", ".join(l_activity))
+    print("Easiest course:", ", ".join(easy_course))
+    print("Hardest course:", ", ".join(hard_course))
 
 
 def main():
