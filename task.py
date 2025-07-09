@@ -239,12 +239,9 @@ def calculate_difficulty():
         count = sum(entry[course] for entry in student_points.values()) / course_stats[course]['submissions']
         counts.setdefault(count, []).append(course)
 
-    print(counts)
-
     if sum(c['submissions'] for c in course_stats.values()):
         # Sort by key descending
         sorted_keys = sorted(counts.keys(), reverse=True)
-        print(sorted_keys)
 
         # First and last positions
         easy_course = counts[sorted_keys[0]]  # values for highest key
