@@ -1,6 +1,7 @@
 import re
 
-acceptable_commands = ['exit', 'add students', 'back', 'list', 'add points', 'find', 'statistics']
+acceptable_commands = ['exit', 'add students', 'back', 'list', 'add points', 'find', 'statistics',
+                       'python', 'dsa', 'databases', 'flask']
 ERROR_MSG = ("No input", "Unknown command!", "Incorrect credentials", "This email is already taken",
              "Incorrect points format.", "No student is found for id=%s")
 INFO_MSG = ("Bye!", "Enter 'exit' to exit the program.", "Enter student credentials or 'back' to return",
@@ -264,6 +265,26 @@ def display_stats():
     print("Hardest course:", ", ".join(hard_course))
 
 
+def stats_for_course(command):
+    course = command.upper() if command == 'dsa' else command.capitalize()
+    print(course)
+    print("id\t", "points", "completed", sep="\t")
+
+    # Count percentage: all user points / course max
+    counts = {}
+    for student_id, points in student_points.items():
+        s_points = points[course]
+        if s_points > 0:
+            count_completed = round(s_points / course_stats[course]['max'] * 100, 1)
+            counts[student_id] = {'points': s_points, 'completed': count_completed}
+
+    if counts:
+        # Sort by key descending
+        sorted_counts = sorted(counts.items(), key=lambda x: (-x[1]['points'], x[0]))
+        for id_s, data in sorted_counts:
+            print(id_s, f"{data['points']}\t", f"{data['completed']}%", sep='\t')
+
+
 def main():
     print("Learning progress tracker")
     command = ''
@@ -283,6 +304,8 @@ def main():
             find()
         elif command == 'statistics':
             display_stats()
+        elif command in ['python', 'dsa', 'databases', 'flask']:
+            stats_for_course(command)
         elif command == 'back':
             print(INFO_MSG[1])
         elif command == 'exit':
